@@ -8,9 +8,12 @@ migrateup:
 	migrate -path db/migration -database "postgresql://${dbuser}:${dbpassword}@${dbhost}:${dbport}/${dbname}?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path db/migration -database "postgresql://${dbuser}:${dbpassword}@${dbhost}:${dbport}/${dbname}?sslmode=disable" -verbose up
+	migrate -path db/migration -database "postgresql://${dbuser}:${dbpassword}@${dbhost}:${dbport}/${dbname}?sslmode=disable" -verbose down
 
 sqlc:
 	sqlc generate
 
-.PHONY: migrateup migratedown sqlc
+run:
+	go run main.go
+
+.PHONY: migrateup migratedown sqlc run
