@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	AddNewSwiftCode(ctx context.Context, arg AddNewSwiftCodeParams) (SwiftDatum, error)
 	CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams) error
+	DeleteSwiftCode(ctx context.Context, swiftCode string) (SwiftDatum, error)
 	GetDetailsCountry(ctx context.Context, countryIso2Code string) ([]GetDetailsCountryRow, error)
 	GetDetailsSwift(ctx context.Context, swiftCode string) ([]GetDetailsSwiftRow, error)
 }

@@ -17,7 +17,6 @@ func main() {
 		log.Fatalf("unable to connect to database: %v\n", err)
 	}
 	defer conn.Close()
-	// store := db.New(conn)
 	store := db.NewStore(conn)
 	handler := &api.Handler{Store: store}
 
@@ -25,5 +24,6 @@ func main() {
 	router.GET("/v1/swift-codes/:swift-code", handler.GetDetailsSwiftCode)
 	router.GET("/v1/swift-codes/country/:countryISO2code", handler.GetCountryIsoDetails)
 	router.POST("/v1/swift-codes", handler.AddSwiftCode)
+	router.DELETE("/v1/swift-codes/:swift-code", handler.DeleteSwiftCode)
 	router.Run(":8080")
 }

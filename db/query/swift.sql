@@ -65,3 +65,9 @@ INSERT INTO swift_data (
     ,' '
     ,' '
 ) RETURNING *;
+
+-- name: DeleteSwiftCode :one
+DELETE FROM swift_data
+WHERE
+    swift_code = @swift_code
+RETURNING *;

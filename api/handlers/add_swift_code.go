@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	models "example.com/m/v2/api/models"
 	db "example.com/m/v2/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
@@ -16,22 +17,17 @@ type AddSwiftCodeRequest struct {
 	SwiftCode     string `json:"swiftCode"`
 }
 
-type FieldViolation struct {
-	Field   string
-	Message string
-}
-
-func validateAddSwiftCodeFields(body *AddSwiftCodeRequest) []FieldViolation {
-	var fieldViolations []FieldViolation
+func validateAddSwiftCodeFields(body *AddSwiftCodeRequest) []models.FieldViolation {
+	var fieldViolations []models.FieldViolation
 
 	if len(body.CountryISO2) != 2 {
-		fieldViolations = append(fieldViolations, FieldViolation{
+		fieldViolations = append(fieldViolations, models.FieldViolation{
 			Field:   "countryISO2",
 			Message: "countryISO2 code should have lenght of 2",
 		})
 	}
 	if len(body.SwiftCode) != 11 {
-		fieldViolations = append(fieldViolations, FieldViolation{
+		fieldViolations = append(fieldViolations, models.FieldViolation{
 			Field:   "swiftCode",
 			Message: "swiftCode should have lenght of 11",
 		})

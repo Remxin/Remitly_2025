@@ -103,6 +103,30 @@ func (q *Queries) CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams
 	return err
 }
 
+const deleteSwiftCode = `-- name: DeleteSwiftCode :one
+DELETE FROM swift_data
+WHERE
+    swift_code = $1
+RETURNING id, country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone
+`
+
+func (q *Queries) DeleteSwiftCode(ctx context.Context, swiftCode string) (SwiftDatum, error) {
+	row := q.db.QueryRowContext(ctx, deleteSwiftCode, swiftCode)
+	var i SwiftDatum
+	err := row.Scan(
+		&i.ID,
+		&i.CountryIso2Code,
+		&i.SwiftCode,
+		&i.CodeType,
+		&i.BankName,
+		&i.Address,
+		&i.TownName,
+		&i.CountryName,
+		&i.TimeZone,
+	)
+	return i, err
+}
+
 const getDetailsCountry = `-- name: GetDetailsCountry :many
 SELECT
 	country_iso2_code
