@@ -13,9 +13,6 @@ migratedown:
 sqlc:
 	sqlc generate
 
-extract:
-	go run extractXLSX.go
-
 run:
 	go run main.go
 

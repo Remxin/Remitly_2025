@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:17.4-alpine
@@ -14,6 +12,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/migration/000001_migration_name.up.sql:/docker-entrypoint-initdb.d/init.sql
+
+  swift_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: swift_service
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
 
 volumes:
   pgdata:
