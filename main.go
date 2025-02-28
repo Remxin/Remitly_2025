@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"log"
 
-	api "example.com/m/v2/api/handlers"
+	api "example.com/m/v2/api"
 	db "example.com/m/v2/db/sqlc"
 	"example.com/m/v2/parser"
 	"example.com/m/v2/utils"
-	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -48,12 +47,5 @@ func main() {
 	log.Print("success: imported .xlsx data")
 
 	store := db.NewStore(conn)
-	handler := &api.Handler{Store: store}
-
-	router := gin.Default()
-	router.GET("/v1/swift-codes/:swift-code", handler.GetDetailsSwiftCode)
-	router.GET("/v1/swift-codes/country/:countryISO2code", handler.GetCountryIsoDetails)
-	router.POST("/v1/swift-codes", handler.AddSwiftCode)
-	router.DELETE("/v1/swift-codes/:swift-code", handler.DeleteSwiftCode)
-	router.Run(":8080")
+	api.SetupRouter(store)
 }

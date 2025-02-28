@@ -13,10 +13,10 @@ migratedown:
 sqlc:
 	sqlc generate
 
-extract:
-	go run extractXLSX.go
+mock: 
+	mockgen -package mockdb -destination db/mock/store.go example.com/m/v2/db/sqlc Store
 
 run:
 	go run main.go
 
-.PHONY: migrateup migratedown sqlc extract run
+.PHONY: migrateup migratedown sqlc mock run

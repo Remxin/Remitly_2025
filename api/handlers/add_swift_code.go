@@ -13,7 +13,7 @@ type AddSwiftCodeRequest struct {
 	BankName      string `json:"bankName"`
 	CountryISO2   string `json:"countryISO2"`
 	CountryName   string `json:"countryName"`
-	IsHeadquarter string `json:"isHeadquarter"`
+	IsHeadquarter bool   `json:"isHeadquarter"`
 	SwiftCode     string `json:"swiftCode"`
 }
 
