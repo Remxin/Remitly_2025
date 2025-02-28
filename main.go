@@ -24,5 +24,6 @@ func main() {
 	router := gin.Default()
 	router.GET("/v1/swift-codes/:swift-code", handler.GetDetailsSwiftCode)
 	router.GET("/v1/swift-codes/country/:countryISO2code", handler.GetCountryIsoDetails)
+	router.POST("/v1/swift-codes", handler.AddSwiftCode)
 	router.Run(":8080")
 }

@@ -3,14 +3,15 @@ package api
 import (
 	"net/http"
 
+	models "example.com/m/v2/api/models"
 	db "example.com/m/v2/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
 
 type GetDetailsCountryCodeResponse struct {
-	CountryISO2 string   `json:"countryISO2"`
-	CountryName string   `json:"countryName"`
-	Branches    []Branch `json:"branches"`
+	CountryISO2 string          `json:"countryISO2"`
+	CountryName string          `json:"countryName"`
+	Branches    []models.Branch `json:"branches"`
 }
 
 func convertToGetDetailsCountryResponse(rows []db.GetDetailsCountryRow) (*GetDetailsCountryCodeResponse, error) {
@@ -18,7 +19,7 @@ func convertToGetDetailsCountryResponse(rows []db.GetDetailsCountryRow) (*GetDet
 	response.CountryISO2 = rows[0].CountryIso2Code
 	response.CountryName = rows[0].CountryName
 	for _, row := range rows {
-		branch := Branch{
+		branch := models.Branch{
 			Address:       row.Address,
 			BankName:      row.BankName,
 			CountryISO2:   row.CountryIso2Code,
@@ -36,12 +37,14 @@ func (handler *Handler) GetCountryIsoDetails(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"message": "no swift-code provided",
 		})
+		return
 	}
 	response, err := handler.Store.GetDetailsCountry(c, countryISO2Code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "error in query",
 		})
+		return
 	}
 
 	formattedResponse, err := convertToGetDetailsCountryResponse(response)
@@ -49,6 +52,7 @@ func (handler *Handler) GetCountryIsoDetails(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "cannot format response",
 		})
+		return
 	}
 	c.JSON(http.StatusOK, formattedResponse)
 }

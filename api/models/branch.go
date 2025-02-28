@@ -1,9 +1,9 @@
 package api
 
 type Branch struct {
-	Address       string
-	BankName      string
-	CountryISO2   string
-	isHeadquarter bool
-	swiftCode     string
+	Address       string `json:"address"`
+	BankName      string `json:"bankName"`
+	CountryISO2   string `json:"countryISO2"`
+	IsHeadquarter bool   `json:"isHeadquarter"`
+	SwiftCode     string `json:"swiftCode"`
 }

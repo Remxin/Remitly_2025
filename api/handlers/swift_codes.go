@@ -3,26 +3,19 @@ package api
 import (
 	"net/http"
 
+	models "example.com/m/v2/api/models"
 	db "example.com/m/v2/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
 
-type Branch struct {
-	Address       string `json:"address"`
-	BankName      string `json:"bankName"`
-	CountryISO2   string `json:"countryISO2"`
-	IsHeadquarter bool   `json:"isHeadquarter"`
-	SwiftCode     string `json:"swiftCode"`
-}
-
 type GetDefailsSwiftCodeResponse struct {
-	Address       string   `json:"address"`
-	BankName      string   `json:"bankName"`
-	CountryISO2   string   `json:"countryISO2"`
-	CountryName   string   `json:"countryName"`
-	IsHeadquarter bool     `json:"isHeadquarter"`
-	SwiftCode     string   `json:"swiftCode"`
-	Branches      []Branch `json:"branches"`
+	Address       string          `json:"address"`
+	BankName      string          `json:"bankName"`
+	CountryISO2   string          `json:"countryISO2"`
+	CountryName   string          `json:"countryName"`
+	IsHeadquarter bool            `json:"isHeadquarter"`
+	SwiftCode     string          `json:"swiftCode"`
+	Branches      []models.Branch `json:"branches"`
 }
 
 func convertToResponse(rows []db.GetDetailsSwiftRow) (*GetDefailsSwiftCodeResponse, error) {
@@ -48,7 +41,7 @@ func convertToResponse(rows []db.GetDetailsSwiftRow) (*GetDefailsSwiftCodeRespon
 			response.IsHeadquarter = true
 			response.SwiftCode = row.SwiftCode
 		} else {
-			branch := Branch{
+			branch := models.Branch{
 				Address:       row.Address,
 				BankName:      row.BankName,
 				CountryISO2:   row.CountryIso2Code,
@@ -68,6 +61,7 @@ func (handler *Handler) GetDetailsSwiftCode(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"message": "no swift-code provided",
 		})
+		return
 	}
 
 	res, err := handler.Store.GetDetailsSwift(c, swiftCode)
@@ -75,6 +69,7 @@ func (handler *Handler) GetDetailsSwiftCode(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "error in query",
 		})
+		return
 	}
 
 	formattedResponse, err := convertToResponse(res)
@@ -82,6 +77,7 @@ func (handler *Handler) GetDetailsSwiftCode(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "cannot format response",
 		})
+		return
 	}
 	c.JSON(http.StatusOK, formattedResponse)
 

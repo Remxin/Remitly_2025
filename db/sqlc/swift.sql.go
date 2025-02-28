@@ -9,6 +9,59 @@ import (
 	"context"
 )
 
+const addNewSwiftCode = `-- name: AddNewSwiftCode :one
+INSERT INTO swift_data (
+    address
+    ,bank_name
+    ,country_iso2_code
+    ,country_name
+    ,swift_code
+    ,code_type
+    ,town_name
+    ,time_zone
+) VALUES (
+    $1
+    ,$2
+    ,UPPER($3)
+    ,UPPER($4)
+    ,$5
+    ,'BIC11'
+    ,' '
+    ,' '
+) RETURNING id, country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone
+`
+
+type AddNewSwiftCodeParams struct {
+	Address         string      `json:"address"`
+	BankName        string      `json:"bank_name"`
+	CountryIso2Code interface{} `json:"country_iso2_code"`
+	CountryName     interface{} `json:"country_name"`
+	SwiftCode       string      `json:"swift_code"`
+}
+
+func (q *Queries) AddNewSwiftCode(ctx context.Context, arg AddNewSwiftCodeParams) (SwiftDatum, error) {
+	row := q.db.QueryRowContext(ctx, addNewSwiftCode,
+		arg.Address,
+		arg.BankName,
+		arg.CountryIso2Code,
+		arg.CountryName,
+		arg.SwiftCode,
+	)
+	var i SwiftDatum
+	err := row.Scan(
+		&i.ID,
+		&i.CountryIso2Code,
+		&i.SwiftCode,
+		&i.CodeType,
+		&i.BankName,
+		&i.Address,
+		&i.TownName,
+		&i.CountryName,
+		&i.TimeZone,
+	)
+	return i, err
+}
+
 const createSwiftData = `-- name: CreateSwiftData :exec
 INSERT INTO swift_data (
     country_iso2_code,
@@ -118,7 +171,7 @@ UNION ALL
 SELECT country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone, 'CHILD' AS parent
 FROM swift_data
 WHERE 
-    RIGHT($1, 3) = 'XXX' -- Sprawdza, czy kod kończy się na XXX
+    RIGHT($1, 3) = 'XXX'
     AND swift_code LIKE CONCAT(LEFT($1, 8), '%')
 `
 
