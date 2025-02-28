@@ -15,7 +15,7 @@ type Branch struct {
 	SwiftCode     string `json:"swiftCode"`
 }
 
-type Response struct {
+type GetDefailsSwiftCodeResponse struct {
 	Address       string   `json:"address"`
 	BankName      string   `json:"bankName"`
 	CountryISO2   string   `json:"countryISO2"`
@@ -25,8 +25,8 @@ type Response struct {
 	Branches      []Branch `json:"branches"`
 }
 
-func convertToResponse(rows []db.GetDetailsSwiftRow) (*Response, error) {
-	var response Response
+func convertToResponse(rows []db.GetDetailsSwiftRow) (*GetDefailsSwiftCodeResponse, error) {
+	var response GetDefailsSwiftCodeResponse
 
 	if len(rows) == 1 {
 		row := rows[0]

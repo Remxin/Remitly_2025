@@ -29,3 +29,17 @@ FROM swift_data
 WHERE 
     RIGHT(@swift_code, 3) = 'XXX' -- Sprawdza, czy kod kończy się na XXX
     AND swift_code LIKE CONCAT(LEFT(@swift_code, 8), '%');
+
+-- name: GetDetailsCountry :many
+SELECT
+	country_iso2_code
+	, country_name
+	,address
+	,bank_name
+	,swift_code
+    ,CASE 
+        WHEN RIGHT(swift_code, 3) = 'XXX' THEN 'PARENT' 
+        ELSE 'CHILD' 
+    END AS parent
+FROM swift_data
+WHERE country_iso2_code = @country_iso2_code;

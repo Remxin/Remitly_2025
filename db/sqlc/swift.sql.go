@@ -50,6 +50,60 @@ func (q *Queries) CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams
 	return err
 }
 
+const getDetailsCountry = `-- name: GetDetailsCountry :many
+SELECT
+	country_iso2_code
+	, country_name
+	,address
+	,bank_name
+	,swift_code
+    ,CASE 
+        WHEN RIGHT(swift_code, 3) = 'XXX' THEN 'PARENT' 
+        ELSE 'CHILD' 
+    END AS parent
+FROM swift_data
+WHERE country_iso2_code = $1
+`
+
+type GetDetailsCountryRow struct {
+	CountryIso2Code string `json:"country_iso2_code"`
+	CountryName     string `json:"country_name"`
+	Address         string `json:"address"`
+	BankName        string `json:"bank_name"`
+	SwiftCode       string `json:"swift_code"`
+	Parent          string `json:"parent"`
+}
+
+func (q *Queries) GetDetailsCountry(ctx context.Context, countryIso2Code string) ([]GetDetailsCountryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDetailsCountry, countryIso2Code)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetDetailsCountryRow{}
+	for rows.Next() {
+		var i GetDetailsCountryRow
+		if err := rows.Scan(
+			&i.CountryIso2Code,
+			&i.CountryName,
+			&i.Address,
+			&i.BankName,
+			&i.SwiftCode,
+			&i.Parent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDetailsSwift = `-- name: GetDetailsSwift :many
 SELECT country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone, 
     CASE 

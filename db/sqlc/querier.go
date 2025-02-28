@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams) error
+	GetDetailsCountry(ctx context.Context, countryIso2Code string) ([]GetDetailsCountryRow, error)
 	GetDetailsSwift(ctx context.Context, swiftCode string) ([]GetDetailsSwiftRow, error)
 }
 
