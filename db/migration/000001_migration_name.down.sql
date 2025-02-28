@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS idx_iso2_code;
+DROP TABLE IF EXISTS swift_data;
