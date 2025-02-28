@@ -13,7 +13,10 @@ migratedown:
 sqlc:
 	sqlc generate
 
+extract:
+	go run extractXLSX.go
+
 run:
 	go run main.go
 
-.PHONY: migrateup migratedown sqlc run
+.PHONY: migrateup migratedown sqlc extract run

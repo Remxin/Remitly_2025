@@ -9,6 +9,59 @@ import (
 	"context"
 )
 
+const addNewSwiftCode = `-- name: AddNewSwiftCode :one
+INSERT INTO swift_data (
+    address
+    ,bank_name
+    ,country_iso2_code
+    ,country_name
+    ,swift_code
+    ,code_type
+    ,town_name
+    ,time_zone
+) VALUES (
+    $1
+    ,$2
+    ,UPPER($3)
+    ,UPPER($4)
+    ,$5
+    ,'BIC11'
+    ,' '
+    ,' '
+) RETURNING id, country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone
+`
+
+type AddNewSwiftCodeParams struct {
+	Address         string      `json:"address"`
+	BankName        string      `json:"bank_name"`
+	CountryIso2Code interface{} `json:"country_iso2_code"`
+	CountryName     interface{} `json:"country_name"`
+	SwiftCode       string      `json:"swift_code"`
+}
+
+func (q *Queries) AddNewSwiftCode(ctx context.Context, arg AddNewSwiftCodeParams) (SwiftDatum, error) {
+	row := q.db.QueryRowContext(ctx, addNewSwiftCode,
+		arg.Address,
+		arg.BankName,
+		arg.CountryIso2Code,
+		arg.CountryName,
+		arg.SwiftCode,
+	)
+	var i SwiftDatum
+	err := row.Scan(
+		&i.ID,
+		&i.CountryIso2Code,
+		&i.SwiftCode,
+		&i.CodeType,
+		&i.BankName,
+		&i.Address,
+		&i.TownName,
+		&i.CountryName,
+		&i.TimeZone,
+	)
+	return i, err
+}
+
 const createSwiftData = `-- name: CreateSwiftData :exec
 INSERT INTO swift_data (
     country_iso2_code,
@@ -48,4 +101,145 @@ func (q *Queries) CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams
 		arg.TimeZone,
 	)
 	return err
+}
+
+const deleteSwiftCode = `-- name: DeleteSwiftCode :one
+DELETE FROM swift_data
+WHERE
+    swift_code = $1
+RETURNING id, country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone
+`
+
+func (q *Queries) DeleteSwiftCode(ctx context.Context, swiftCode string) (SwiftDatum, error) {
+	row := q.db.QueryRowContext(ctx, deleteSwiftCode, swiftCode)
+	var i SwiftDatum
+	err := row.Scan(
+		&i.ID,
+		&i.CountryIso2Code,
+		&i.SwiftCode,
+		&i.CodeType,
+		&i.BankName,
+		&i.Address,
+		&i.TownName,
+		&i.CountryName,
+		&i.TimeZone,
+	)
+	return i, err
+}
+
+const getDetailsCountry = `-- name: GetDetailsCountry :many
+SELECT
+	country_iso2_code
+	, country_name
+	,address
+	,bank_name
+	,swift_code
+    ,CASE 
+        WHEN RIGHT(swift_code, 3) = 'XXX' THEN 'PARENT' 
+        ELSE 'CHILD' 
+    END AS parent
+FROM swift_data
+WHERE country_iso2_code = $1
+`
+
+type GetDetailsCountryRow struct {
+	CountryIso2Code string `json:"country_iso2_code"`
+	CountryName     string `json:"country_name"`
+	Address         string `json:"address"`
+	BankName        string `json:"bank_name"`
+	SwiftCode       string `json:"swift_code"`
+	Parent          string `json:"parent"`
+}
+
+func (q *Queries) GetDetailsCountry(ctx context.Context, countryIso2Code string) ([]GetDetailsCountryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDetailsCountry, countryIso2Code)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetDetailsCountryRow{}
+	for rows.Next() {
+		var i GetDetailsCountryRow
+		if err := rows.Scan(
+			&i.CountryIso2Code,
+			&i.CountryName,
+			&i.Address,
+			&i.BankName,
+			&i.SwiftCode,
+			&i.Parent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDetailsSwift = `-- name: GetDetailsSwift :many
+SELECT country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone, 
+    CASE 
+        WHEN RIGHT($1, 3) = 'XXX' THEN 'PARENT' 
+        ELSE 'CHILD' 
+    END AS parent
+FROM swift_data
+WHERE swift_code = $1
+
+UNION ALL
+
+SELECT country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone, 'CHILD' AS parent
+FROM swift_data
+WHERE 
+    RIGHT($1, 3) = 'XXX'
+    AND swift_code LIKE CONCAT(LEFT($1, 8), '%')
+`
+
+type GetDetailsSwiftRow struct {
+	CountryIso2Code string `json:"country_iso2_code"`
+	SwiftCode       string `json:"swift_code"`
+	CodeType        string `json:"code_type"`
+	BankName        string `json:"bank_name"`
+	Address         string `json:"address"`
+	TownName        string `json:"town_name"`
+	CountryName     string `json:"country_name"`
+	TimeZone        string `json:"time_zone"`
+	Parent          string `json:"parent"`
+}
+
+func (q *Queries) GetDetailsSwift(ctx context.Context, swiftCode string) ([]GetDetailsSwiftRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDetailsSwift, swiftCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetDetailsSwiftRow{}
+	for rows.Next() {
+		var i GetDetailsSwiftRow
+		if err := rows.Scan(
+			&i.CountryIso2Code,
+			&i.SwiftCode,
+			&i.CodeType,
+			&i.BankName,
+			&i.Address,
+			&i.TownName,
+			&i.CountryName,
+			&i.TimeZone,
+			&i.Parent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
