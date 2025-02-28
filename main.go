@@ -9,6 +9,7 @@ import (
 	api "example.com/m/v2/api/handlers"
 	db "example.com/m/v2/db/sqlc"
 	"example.com/m/v2/parser"
+	"example.com/m/v2/utils"
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -30,7 +31,12 @@ func ExtractXLSXDataToDB(conn *sql.DB) error {
 }
 
 func main() {
-	conn, err := sql.Open("postgres", "postgres://admin:secretpassword@localhost:5432/swift_db?sslmode=disable")
+	config, err := utils.LoadConfig(".")
+	if err != nil {
+		log.Fatalf("unable to load confi file: %v\n", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v\n", err)
 	}
