@@ -49,3 +49,66 @@ func (q *Queries) CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams
 	)
 	return err
 }
+
+const getDetailsSwift = `-- name: GetDetailsSwift :many
+SELECT country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone, 
+    CASE 
+        WHEN RIGHT($1, 3) = 'XXX' THEN 'PARENT' 
+        ELSE 'CHILD' 
+    END AS parent
+FROM swift_data
+WHERE swift_code = $1
+
+UNION ALL
+
+SELECT country_iso2_code, swift_code, code_type, bank_name, address, town_name, country_name, time_zone, 'CHILD' AS parent
+FROM swift_data
+WHERE 
+    RIGHT($1, 3) = 'XXX' -- Sprawdza, czy kod kończy się na XXX
+    AND swift_code LIKE CONCAT(LEFT($1, 8), '%')
+`
+
+type GetDetailsSwiftRow struct {
+	CountryIso2Code string `json:"country_iso2_code"`
+	SwiftCode       string `json:"swift_code"`
+	CodeType        string `json:"code_type"`
+	BankName        string `json:"bank_name"`
+	Address         string `json:"address"`
+	TownName        string `json:"town_name"`
+	CountryName     string `json:"country_name"`
+	TimeZone        string `json:"time_zone"`
+	Parent          string `json:"parent"`
+}
+
+func (q *Queries) GetDetailsSwift(ctx context.Context, swiftCode string) ([]GetDetailsSwiftRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDetailsSwift, swiftCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetDetailsSwiftRow{}
+	for rows.Next() {
+		var i GetDetailsSwiftRow
+		if err := rows.Scan(
+			&i.CountryIso2Code,
+			&i.SwiftCode,
+			&i.CodeType,
+			&i.BankName,
+			&i.Address,
+			&i.TownName,
+			&i.CountryName,
+			&i.TimeZone,
+			&i.Parent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

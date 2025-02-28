@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	CreateSwiftData(ctx context.Context, arg CreateSwiftDataParams) error
+	GetDetailsSwift(ctx context.Context, swiftCode string) ([]GetDetailsSwiftRow, error)
 }
 
 var _ Querier = (*Queries)(nil)
